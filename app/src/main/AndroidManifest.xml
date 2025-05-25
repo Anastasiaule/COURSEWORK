@@ -23,7 +23,7 @@
         </activity>
         <activity android:name=".ProjectDetailsActivity" />
         <activity android:name=".CatalogActivity" />
-
+        <activity android:name=".StockActivity" />
     </application>
 
 </manifest>

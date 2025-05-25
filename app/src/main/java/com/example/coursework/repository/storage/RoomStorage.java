@@ -142,15 +142,32 @@ public class RoomStorage {
 
     // Добавить материал на склад
     public MaterialStock addMaterialStock(MaterialStock material) {
-        MaterialStockEntity e = new MaterialStockEntity();
-        e.name = material.getName();
-        e.color = material.getColor();
-        e.unit = material.getUnit();
-        e.quantity = material.getQuantity();
-        long id = db.materialStockDao().insert(e);
-        material.setId((int) id);
+        MaterialStockEntity existing = db.materialStockDao()
+                .findByNameColorUnit(material.getName(), material.getColor(), material.getUnit());
+
+        if (existing != null) {
+            // Суммируем и обновляем
+            existing.quantity += material.getQuantity();
+            db.materialStockDao().update(existing);
+
+            material.setId(existing.id);
+            material.setQuantity(existing.quantity);
+        } else {
+            // Вставляем новый
+            MaterialStockEntity e = new MaterialStockEntity();
+            e.name = material.getName();
+            e.color = material.getColor();
+            e.unit = material.getUnit();
+            e.quantity = material.getQuantity();
+
+            long id = db.materialStockDao().insert(e);
+            material.setId((int) id);
+        }
+
         return material;
     }
+
+
 
     // Прочитать все материалы со склада
     public List<MaterialStock> readMaterialStock() {

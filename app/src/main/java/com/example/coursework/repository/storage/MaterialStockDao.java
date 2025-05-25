@@ -3,6 +3,7 @@ package com.example.coursework.repository.storage;
 import androidx.room.Dao;
 import androidx.room.Delete;
 import androidx.room.Insert;
+import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 
@@ -13,6 +14,8 @@ public interface MaterialStockDao {
 
     @Insert
     long insert(MaterialStockEntity materialStock);
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    long insertOrUpdate(MaterialStockEntity e);
 
     @Update
     void update(MaterialStockEntity materialStock);
@@ -28,4 +31,8 @@ public interface MaterialStockDao {
 
     @Query("SELECT * FROM material_stock WHERE name = :name AND color = :color")
     MaterialStockEntity findByNameAndColor(String name, String color);
+
+    @Query("SELECT * FROM material_stock WHERE name = :name AND color = :color AND unit = :unit LIMIT 1")
+    MaterialStockEntity findByNameColorUnit(String name, String color, String unit);
+
 }

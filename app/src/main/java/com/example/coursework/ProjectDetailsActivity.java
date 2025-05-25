@@ -40,7 +40,7 @@ public class ProjectDetailsActivity extends AppCompatActivity {
         private Button btnAddTool;
         private TextView tvProjectName;
         private TextView tvProjectType;
-
+        private MaterialStockUseCase materialStockUseCase;
         private ArrayAdapter<MaterialCatalog> materialsAdapter;
     private ArrayAdapter<ToolCatalog> toolsAdapter;
 
@@ -161,6 +161,7 @@ public class ProjectDetailsActivity extends AppCompatActivity {
 
         materialUseCase = new MaterialCatalogUseCase(new DBMaterialCatalogRepository(storage));
         toolUseCase = new ToolCatalogUseCase(new DBToolCatalogRepository(storage));
+        materialStockUseCase = new MaterialStockUseCase(new DBMaterialStockRepository(storage));
         projectRepo = new DBProjectRepository(storage);
         projectUseCase = new ProjectUseCase(
                 projectRepo,
@@ -347,40 +348,97 @@ public class ProjectDetailsActivity extends AppCompatActivity {
 
     private void showQuantityDialog(MaterialCatalog material) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Укажите количество для " + material.getName()+", "+material.getUnit());
+        builder.setTitle("Укажите количество для " + material.getName() + ", " + material.getUnit());
 
         final EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
         builder.setView(input);
 
         builder.setPositiveButton("Добавить", (dialog, which) -> {
+            String inputText = input.getText().toString().trim();
+            if (inputText.isEmpty()) {
+                Toast.makeText(this, "Введите количество", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            int requestedQuantity;
             try {
-                int quantity = Integer.parseInt(input.getText().toString());
-                if (quantity <= 0) {
+                requestedQuantity = Integer.parseInt(inputText);
+                if (requestedQuantity <= 0) {
                     Toast.makeText(this, "Количество должно быть больше 0", Toast.LENGTH_SHORT).show();
                     return;
                 }
-
-                new Thread(() -> {
-                    try {
-                        projectUseCase.linkMaterialToProject(projectId, material.getId(), quantity);
-                        runOnUiThread(() -> {
-                            Toast.makeText(this, material.getName() + " добавлен", Toast.LENGTH_SHORT).show();
-                            loadProjectMaterialsAndTools();
-                        });
-                    } catch (Exception e) {
-                        runOnUiThread(() ->
-                                Toast.makeText(this, "Ошибка добавления: " + e.getMessage(), Toast.LENGTH_SHORT).show());
-                    }
-                }).start();
             } catch (NumberFormatException e) {
-                Toast.makeText(this, "Введите число", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Введите корректное число", Toast.LENGTH_SHORT).show();
+                return;
             }
+
+            new Thread(() -> {
+                try {
+                    List<MaterialStock> stockList = materialStockUseCase.getAllMaterials();
+                    MaterialStock matchingStock = null;
+
+                    for (MaterialStock stock : stockList) {
+                        if (stock.getName().equals(material.getName()) &&
+                                stock.getColor().equals(material.getColor()) &&
+                                stock.getUnit().equals(material.getUnit())) {
+
+                            matchingStock = stock;
+                            break;
+                        }
+                    }
+
+                    int stockQuantity = (matchingStock != null) ? matchingStock.getQuantity() : 0;
+
+                    // Добавляем материал в проект
+                    projectUseCase.linkMaterialToProject(projectId, material.getId(), requestedQuantity);
+
+                    // Если есть такой на складе — обновляем его количество
+                    if (matchingStock != null) {
+                        int newQuantity = stockQuantity - requestedQuantity;
+                        MaterialStock updatedStock = new MaterialStock(
+                                matchingStock.getId(),
+                                matchingStock.getName(),
+                                matchingStock.getColor(),
+                                newQuantity,
+                                matchingStock.getUnit()
+                        );
+                        materialStockUseCase.delete(matchingStock); // удалим старую запись
+                        materialStockUseCase.createNewMaterialStock(
+                                updatedStock.getName(),
+                                updatedStock.getColor(),
+                                updatedStock.getQuantity(),
+                                updatedStock.getUnit()
+                        );
+                    }
+
+                    runOnUiThread(() -> {
+                        if (stockQuantity == 0) {
+                            Toast.makeText(this, "Материал отсутствует на складе, но добавлен в проект", Toast.LENGTH_LONG).show();
+                        } else if (stockQuantity < requestedQuantity) {
+                            int deficit = requestedQuantity - stockQuantity;
+                            Toast.makeText(this, "Не хватает " + deficit + " " + material.getUnit() + ", но добавлено", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(this, material.getName() + " добавлен в проект", Toast.LENGTH_SHORT).show();
+                        }
+
+                        loadProjectMaterialsAndTools();
+                    });
+
+                } catch (Exception e) {
+                    runOnUiThread(() ->
+                            Toast.makeText(this, "Ошибка добавления: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                    );
+                }
+            }).start();
         });
 
-        builder.setNegativeButton("Отмена", null)
-                .show();
+        builder.setNegativeButton("Отмена", (dialog, which) -> dialog.cancel());
+        builder.show();
     }
+
+
+
 
     @Override
     protected void onResume() {

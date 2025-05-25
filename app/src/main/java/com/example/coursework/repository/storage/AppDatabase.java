@@ -11,7 +11,9 @@ import androidx.room.RoomDatabase;
                 MaterialEntity.class,
                 ToolEntity.class,
                 ProjectMaterialCrossRef.class,
-                ProjectToolCrossRef.class
+                ProjectToolCrossRef.class,
+                MaterialStockEntity.class,
+                ToolStockEntity.class
         },
         version = 1,
         exportSchema = false

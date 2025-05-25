@@ -38,13 +38,13 @@ public abstract class BaseActivity extends AppCompatActivity {
             btnAdd.setOnClickListener(v -> ((MainActivity) this).showAddProjectDialog());
         }
 
-        /*
+
         if (btnWarehouse != null) {
             btnWarehouse.setOnClickListener(v -> {
                 // Запускаем активити склада (создай WarehouseActivity или как назовёшь)
-                startActivity(new Intent(this, WarehouseActivity.class));
+                startActivity(new Intent(this, StockActivity.class));
             });
-        }*/
+        }
     }
 
     @Override

@@ -1,17 +1,31 @@
 package com.example.coursework.domain.entity;
 
-public class MaterialStock {
+import com.example.coursework.repository.storage.MaterialStockEntity;
+
+public class MaterialStock extends MaterialStockEntity {
     private String name;
     private String color;
     private String unit;
     private int quantity;
     private int id;
+    // Конструктор для новых материалов — без ID
     public MaterialStock(String name, String color, int quantity, String unit) {
         this.name = name;
         this.color = color;
-        this.quantity=quantity;
-        this.unit=unit;
+        this.quantity = quantity;
+        this.unit = unit;
     }
+
+    // Конструктор для обновления — с ID
+    public MaterialStock(int id, String name, String color, int quantity, String unit) {
+        this.id = id;
+        this.name = name;
+        this.color = color;
+        this.quantity = quantity;
+        this.unit = unit;
+    }
+
+
     @Override
     public String toString() {
         return name + " (" + color + "), "+quantity+" "+unit;
