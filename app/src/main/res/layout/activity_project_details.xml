@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <!-- Информация о проекте -->
+    <TextView
+        android:id="@+id/tvProjectName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textStyle="bold"/>
+
+    <TextView
+        android:id="@+id/tvProjectType"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Кнопки управления -->
+    <Button
+        android:id="@+id/btnAddMaterial"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Добавить материал"
+        android:layout_marginBottom="8dp"/>
+
+    <Button
+        android:id="@+id/btnAddTool"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Добавить инструмент"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Список материалов -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Материалы проекта:"/>
+
+    <ListView
+        android:id="@+id/lvMaterials"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Список инструментов -->
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Инструменты проекта:"/>
+
+    <ListView
+        android:id="@+id/lvTools"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+</LinearLayout>

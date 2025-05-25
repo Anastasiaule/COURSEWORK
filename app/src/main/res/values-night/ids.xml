@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="project_name" type="id" />
+    <item name="project_type" type="id" />
+    <item name="fabAdd" type="id" />
+</resources>
