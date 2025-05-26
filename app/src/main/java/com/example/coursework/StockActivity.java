@@ -32,6 +32,7 @@ import com.example.coursework.repository.indatabase.DBToolCatalogRepository;
 import com.example.coursework.repository.indatabase.DBToolStockRepository;
 import com.example.coursework.repository.storage.AppDatabase;
 import com.example.coursework.repository.storage.RoomStorage;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
@@ -57,8 +58,9 @@ public class StockActivity extends BaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_catalog); // можно заменить на activity_stock.xml
+        setContentView(R.layout.activity_stock);
         setupMenu();
+        setActiveMenuItem(R.id.nav_warehouse);
         initDatabase();
 
         etSearch = findViewById(R.id.etSearch);

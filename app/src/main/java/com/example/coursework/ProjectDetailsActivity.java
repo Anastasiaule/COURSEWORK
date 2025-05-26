@@ -20,6 +20,7 @@ import com.example.coursework.domain.usecase.*;
 import com.example.coursework.repository.dto.*;
 import com.example.coursework.repository.indatabase.*;
 import com.example.coursework.repository.storage.*;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,7 +65,12 @@ public class ProjectDetailsActivity extends AppCompatActivity {
 
         // Загрузка данных проекта
         loadProjectData();
-        
+
+        FloatingActionButton fabAdd = findViewById(R.id.fabBack);
+
+        fabAdd.setOnClickListener(v -> {
+            finish(); // просто закрывает текущую активность и возвращает на главную
+        });
 
         // Долгое нажатие на материал — удаление
         lvMaterials.setOnItemLongClickListener((parent, view, position, id) -> {

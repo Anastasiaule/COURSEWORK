@@ -24,6 +24,7 @@ import com.example.coursework.repository.indatabase.DBMaterialCatalogRepository;
 import com.example.coursework.repository.indatabase.DBToolCatalogRepository;
 import com.example.coursework.repository.storage.AppDatabase;
 import com.example.coursework.repository.storage.RoomStorage;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -38,6 +39,8 @@ public class MainActivity extends BaseActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setupMenu();
+        setActiveMenuItem(R.id.nav_main);
+
         // Инициализация Room
         AppDatabase db = Room.databaseBuilder(
                         getApplicationContext(),
@@ -57,7 +60,7 @@ public class MainActivity extends BaseActivity  {
 
         // Инициализация UI
         projectsListView = findViewById(R.id.projectsListView);
-        Button btnAdd = findViewById(R.id.nav_add);
+
 
         // Загрузка проектов
         loadProjects();
@@ -104,6 +107,7 @@ public class MainActivity extends BaseActivity  {
     }
 
     public void showAddProjectDialog() {
+
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         LayoutInflater inflater = getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.dialog_add_project, null);

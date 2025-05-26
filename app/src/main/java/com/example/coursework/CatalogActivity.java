@@ -24,6 +24,7 @@ import com.example.coursework.repository.indatabase.DBMaterialCatalogRepository;
 import com.example.coursework.repository.indatabase.DBToolCatalogRepository;
 import com.example.coursework.repository.storage.AppDatabase;
 import com.example.coursework.repository.storage.RoomStorage;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -51,6 +52,8 @@ public class CatalogActivity extends BaseActivity  {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_catalog);
         setupMenu();
+        setActiveMenuItem(R.id.nav_catalog);
+
         initDatabase();
 
         etSearch = findViewById(R.id.etSearch);
