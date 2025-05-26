@@ -11,10 +11,6 @@
         android:icon="@drawable/baseline_auto_stories_24"
         android:title="Каталог" />
 
-    <item
-        android:id="@+id/nav_add"
-        android:icon="@drawable/baseline_add_circle_outline_24"
-        android:title="Добавить" />
 
     <item
         android:id="@+id/nav_warehouse"

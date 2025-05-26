@@ -10,13 +10,16 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-    <!-- Информация о проекте -->
+
     <TextView
         android:id="@+id/tvProjectName"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="20sp"
-        android:textStyle="bold"/>
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#6200EE"
+        android:gravity="center"
+        android:paddingBottom="12dp" />
 
     <TextView
         android:id="@+id/tvProjectType"

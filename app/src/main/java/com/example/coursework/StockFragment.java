@@ -7,20 +7,21 @@ import android.text.InputType;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import androidx.room.Room;
 
 import com.example.coursework.domain.entity.MaterialCatalog;
 import com.example.coursework.domain.entity.MaterialStock;
 import com.example.coursework.domain.entity.ToolCatalog;
 import com.example.coursework.domain.entity.ToolStock;
-import com.example.coursework.domain.exceptions.MaterialException;
 import com.example.coursework.domain.exceptions.ToolException;
 import com.example.coursework.domain.usecase.MaterialCatalogUseCase;
 import com.example.coursework.domain.usecase.MaterialStockUseCase;
@@ -32,7 +33,6 @@ import com.example.coursework.repository.indatabase.DBToolCatalogRepository;
 import com.example.coursework.repository.indatabase.DBToolStockRepository;
 import com.example.coursework.repository.storage.AppDatabase;
 import com.example.coursework.repository.storage.RoomStorage;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.tabs.TabLayout;
 
@@ -40,32 +40,32 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StockActivity extends BaseActivity {
+public class StockFragment extends Fragment {
 
     private MaterialStockUseCase materialStockUseCase;
     private ToolStockUseCase toolStockUseCase;
     private MaterialCatalogUseCase materialCatalogUseCase;
     private ToolCatalogUseCase toolCatalogUseCase;
+
     private List<MaterialStock> allMaterialStock = new ArrayList<>();
     private List<ToolStock> allToolStock = new ArrayList<>();
 
     private EditText etSearch;
     private TabLayout tabLayout;
     private ListView lvStock;
-
     private ArrayAdapter<?> currentAdapter;
 
+    @Nullable
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_stock);
-        setupMenu();
-        setActiveMenuItem(R.id.nav_warehouse);
-        initDatabase();
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.activity_stock, container, false); // ⚠️ Ensure you have this layout
 
-        etSearch = findViewById(R.id.etSearch);
-        tabLayout = findViewById(R.id.tabLayout);
-        lvStock = findViewById(R.id.lvCatalog);
+        etSearch = view.findViewById(R.id.etSearch);
+        tabLayout = view.findViewById(R.id.tabLayout);
+        lvStock = view.findViewById(R.id.lvCatalog);
+        FloatingActionButton fabAdd = view.findViewById(R.id.fabAdd);
+
+        initDatabase();
 
         tabLayout.addTab(tabLayout.newTab().setText("Материалы"));
         tabLayout.addTab(tabLayout.newTab().setText("Инструменты"));
@@ -75,12 +75,13 @@ public class StockActivity extends BaseActivity {
             public void onTabSelected(TabLayout.Tab tab) {
                 updateListView();
             }
+
             @Override public void onTabUnselected(TabLayout.Tab tab) {}
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
-        lvStock.setOnItemLongClickListener((parent, view, position, id) -> {
-            int selectedTab = tabLayout.getSelectedTabPosition();
-            if (selectedTab == 0) {
+
+        lvStock.setOnItemLongClickListener((parent, v, position, id) -> {
+            if (tabLayout.getSelectedTabPosition() == 0) {
                 MaterialStock selected = (MaterialStock) parent.getItemAtPosition(position);
                 showDeleteMaterialStockDialog(selected);
             } else {
@@ -90,7 +91,6 @@ public class StockActivity extends BaseActivity {
             return true;
         });
 
-        FloatingActionButton fabAdd = findViewById(R.id.fabAdd);
         fabAdd.setOnClickListener(v -> {
             if (tabLayout.getSelectedTabPosition() == 0) {
                 showAddMaterialStockDialog();
@@ -108,10 +108,12 @@ public class StockActivity extends BaseActivity {
         });
 
         loadData();
+
+        return view;
     }
 
     private void initDatabase() {
-        AppDatabase db = Room.databaseBuilder(getApplicationContext(), AppDatabase.class, "coursework-db")
+        AppDatabase db = Room.databaseBuilder(requireContext(), AppDatabase.class, "coursework-db")
                 .allowMainThreadQueries()
                 .fallbackToDestructiveMigration()
                 .build();
@@ -126,19 +128,18 @@ public class StockActivity extends BaseActivity {
         new Thread(() -> {
             allMaterialStock = materialStockUseCase.getAllMaterials();
             allToolStock = toolStockUseCase.getAllTools();
-            runOnUiThread(this::updateListView);
+            requireActivity().runOnUiThread(this::updateListView);
         }).start();
     }
 
     private void updateListView() {
         int selectedTab = tabLayout.getSelectedTabPosition();
         if (selectedTab == 0) {
-            currentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, allMaterialStock);
-            lvStock.setAdapter(currentAdapter);
+            currentAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, allMaterialStock);
         } else {
-            currentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, allToolStock);
-            lvStock.setAdapter(currentAdapter);
+            currentAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, allToolStock);
         }
+        lvStock.setAdapter(currentAdapter);
     }
 
     private void filterData(String query) {
@@ -150,7 +151,7 @@ public class StockActivity extends BaseActivity {
                     filtered.add(m);
                 }
             }
-            currentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filtered);
+            currentAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, filtered);
         } else {
             List<ToolStock> filtered = new ArrayList<>();
             for (ToolStock t : allToolStock) {
@@ -158,7 +159,7 @@ public class StockActivity extends BaseActivity {
                     filtered.add(t);
                 }
             }
-            currentAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, filtered);
+            currentAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, filtered);
         }
         lvStock.setAdapter(currentAdapter);
     }
@@ -168,13 +169,13 @@ public class StockActivity extends BaseActivity {
             try {
                 List<MaterialCatalog> allMaterials = materialCatalogUseCase.getAllMaterials();
 
-                runOnUiThread(() -> {
+                requireActivity().runOnUiThread(() -> {
                     if (allMaterials.isEmpty()) {
-                        Toast.makeText(this, "Каталог материалов пуст", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "Каталог материалов пуст", Toast.LENGTH_SHORT).show();
                         return;
                     }
 
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
                     builder.setTitle("Выберите материал");
 
                     String[] items = new String[allMaterials.size()];
@@ -191,61 +192,17 @@ public class StockActivity extends BaseActivity {
                     builder.setNegativeButton("Отмена", null).show();
                 });
             } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(this, "Ошибка загрузки каталога материалов", Toast.LENGTH_SHORT).show());
-            }
-        }).start();
-    }
-
-
-
-    private void showAddToolStockDialog() {
-        new Thread(() -> {
-            try {
-                List<ToolCatalog> allTools = toolCatalogUseCase.getAllTools();
-
-                runOnUiThread(() -> {
-                    if (allTools.isEmpty()) {
-                        Toast.makeText(this, "Каталог инструментов пуст", Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Выберите инструмент");
-
-                    String[] items = new String[allTools.size()];
-                    for (int i = 0; i < allTools.size(); i++) {
-                        items[i] = allTools.get(i).getName() + " (" + allTools.get(i).getCategory() + ")";
-                    }
-
-                    builder.setItems(items, (dialog, which) -> {
-                        ToolCatalog selectedTool = allTools.get(which);
-
-                        new Thread(() -> {
-                            try {
-                                toolStockUseCase.createNewToolStock(selectedTool.getName(), selectedTool.getCategory());
-                                allToolStock = toolStockUseCase.getAllTools();
-                                runOnUiThread(this::updateListView);
-                            } catch (SQLException e) {
-                                runOnUiThread(() -> Toast.makeText(this, "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show());
-                            } catch (ToolException e) {
-                                throw new RuntimeException(e);
-                            }
-                        }).start();
-                    });
-
-                    builder.setNegativeButton("Отмена", null).show();
-                });
-            } catch (Exception e) {
-                runOnUiThread(() -> Toast.makeText(this, "Ошибка загрузки каталога инструментов", Toast.LENGTH_SHORT).show());
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), "Ошибка загрузки каталога материалов", Toast.LENGTH_SHORT).show());
             }
         }).start();
     }
 
     private void showMaterialQuantityDialog(MaterialCatalog material) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Количество для " + material.getName() + " (" + material.getUnit() + ")");
 
-        final EditText input = new EditText(this);
+        final EditText input = new EditText(requireContext());
         input.setInputType(InputType.TYPE_CLASS_NUMBER);
         builder.setView(input);
 
@@ -253,7 +210,7 @@ public class StockActivity extends BaseActivity {
             try {
                 int quantity = Integer.parseInt(input.getText().toString());
                 if (quantity <= 0) {
-                    Toast.makeText(this, "Введите положительное количество", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Введите положительное количество", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -266,37 +223,80 @@ public class StockActivity extends BaseActivity {
                                 material.getUnit()
                         );
                         allMaterialStock = materialStockUseCase.getAllMaterials();
-                        runOnUiThread(this::updateListView);
+                        requireActivity().runOnUiThread(this::updateListView);
                     } catch (Exception e) {
-                        runOnUiThread(() ->
-                                Toast.makeText(this, "Ошибка добавления: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(requireContext(), "Ошибка добавления: " + e.getMessage(), Toast.LENGTH_LONG).show());
                     }
                 }).start();
             } catch (NumberFormatException e) {
-                Toast.makeText(this, "Некорректное количество", Toast.LENGTH_SHORT).show();
+                Toast.makeText(requireContext(), "Некорректное количество", Toast.LENGTH_SHORT).show();
             }
         });
 
         builder.setNegativeButton("Отмена", null).show();
     }
 
+    private void showAddToolStockDialog() {
+        new Thread(() -> {
+            try {
+                List<ToolCatalog> allTools = toolCatalogUseCase.getAllTools();
+
+                requireActivity().runOnUiThread(() -> {
+                    if (allTools.isEmpty()) {
+                        Toast.makeText(requireContext(), "Каталог инструментов пуст", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+
+                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                    builder.setTitle("Выберите инструмент");
+
+                    String[] items = new String[allTools.size()];
+                    for (int i = 0; i < allTools.size(); i++) {
+                        items[i] = allTools.get(i).getName() + " (" + allTools.get(i).getCategory() + ")";
+                    }
+
+                    builder.setItems(items, (dialog, which) -> {
+                        ToolCatalog selectedTool = allTools.get(which);
+                        new Thread(() -> {
+                            try {
+                                toolStockUseCase.createNewToolStock(selectedTool.getName(), selectedTool.getCategory());
+                                allToolStock = toolStockUseCase.getAllTools();
+                                requireActivity().runOnUiThread(this::updateListView);
+                            } catch (SQLException e) {
+                                requireActivity().runOnUiThread(() ->
+                                        Toast.makeText(requireContext(), "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                            } catch (ToolException e) {
+                                throw new RuntimeException(e);
+                            }
+                        }).start();
+                    });
+
+                    builder.setNegativeButton("Отмена", null).show();
+                });
+            } catch (Exception e) {
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(requireContext(), "Ошибка загрузки каталога инструментов", Toast.LENGTH_SHORT).show());
+            }
+        }).start();
+    }
+
     private void showDeleteMaterialStockDialog(MaterialStock stock) {
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(requireContext())
                 .setTitle("Удалить со склада")
                 .setMessage("Удалить \"" + stock.getName() + "\" (" + stock.getColor() + ")?")
                 .setPositiveButton("Удалить", (dialog, which) -> {
                     new Thread(() -> {
                         try {
                             materialStockUseCase.delete(stock);
-                            runOnUiThread(() -> {
+                            requireActivity().runOnUiThread(() -> {
                                 allMaterialStock.remove(stock);
-                                updateListView(); // Обнови список
-                                Toast.makeText(this, "Материал удалён со склада", Toast.LENGTH_SHORT).show();
+                                updateListView();
+                                Toast.makeText(requireContext(), "Материал удалён со склада", Toast.LENGTH_SHORT).show();
                             });
                         } catch (Exception e) {
-                            runOnUiThread(() ->
-                                    Toast.makeText(this, "Ошибка удаления: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                            );
+                            requireActivity().runOnUiThread(() ->
+                                    Toast.makeText(requireContext(), "Ошибка удаления: " + e.getMessage(), Toast.LENGTH_LONG).show());
                         }
                     }).start();
                 })
@@ -305,27 +305,26 @@ public class StockActivity extends BaseActivity {
     }
 
     private void showDeleteToolStockDialog(ToolStock stock) {
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(requireContext())
                 .setTitle("Удалить со склада")
                 .setMessage("Удалить \"" + stock.getName() + "\" (" + stock.getCategory() + ")?")
                 .setPositiveButton("Удалить", (dialog, which) -> {
                     new Thread(() -> {
                         try {
                             toolStockUseCase.delete(stock);
-                            runOnUiThread(() -> {
+                            requireActivity().runOnUiThread(() -> {
                                 allToolStock.remove(stock);
                                 updateListView();
-                                Toast.makeText(this, "Инструмент удалён со склада", Toast.LENGTH_SHORT).show();
+                                Toast.makeText(requireContext(), "Инструмент удалён со склада", Toast.LENGTH_SHORT).show();
                             });
                         } catch (Exception e) {
-                            runOnUiThread(() ->
-                                    Toast.makeText(this, "Ошибка удаления: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                            );
+                            requireActivity().runOnUiThread(() ->
+                                    Toast.makeText(requireContext(), "Ошибка удаления: " + e.getMessage(), Toast.LENGTH_LONG).show());
                         }
                     }).start();
                 })
                 .setNegativeButton("Отмена", null)
                 .show();
     }
-
 }
+
