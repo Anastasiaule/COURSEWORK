@@ -23,11 +23,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ProjectDetailsFragment extends Fragment {
-
     private ProjectUseCase projectUseCase;
     private MaterialCatalogUseCase materialUseCase;
     private ToolCatalogUseCase toolUseCase;
     private DBProjectRepository projectRepo;
+    private MaterialStockUseCase materialStockUseCase;
     private int projectId;
     private Project currentProject;
 
@@ -37,11 +37,8 @@ public class ProjectDetailsFragment extends Fragment {
     private Button btnAddTool;
     private TextView tvProjectName;
     private TextView tvProjectType;
-    private MaterialStockUseCase materialStockUseCase;
-    private ArrayAdapter<MaterialCatalog> materialsAdapter;
+    private ArrayAdapter<String> materialsAdapter;
     private ArrayAdapter<ToolCatalog> toolsAdapter;
-
-    public ProjectDetailsFragment() {}
 
     public static ProjectDetailsFragment newInstance(int projectId) {
         ProjectDetailsFragment fragment = new ProjectDetailsFragment();
@@ -74,40 +71,58 @@ public class ProjectDetailsFragment extends Fragment {
         initDatabase();
         loadProjectData();
 
-        FloatingActionButton fabAdd = view.findViewById(R.id.fabBack);
-        fabAdd.setOnClickListener(v -> requireActivity().onBackPressed());
+        view.findViewById(R.id.fabBack).setOnClickListener(v -> requireActivity().onBackPressed());
 
         lvMaterials.setOnItemLongClickListener((parent, itemView, position, id) -> {
-            MaterialCatalog selectedMaterial = (MaterialCatalog) parent.getItemAtPosition(position);
+            String itemText = materialsAdapter.getItem(position);
             new AlertDialog.Builder(requireContext())
                     .setTitle("Удалить материал")
-                    .setMessage("Удалить " + selectedMaterial.getName() + " из проекта?")
-                    .setPositiveButton("Удалить", (dialog, which) -> new Thread(() -> {
-                        try {
-                            projectUseCase.unlinkMaterialFromProject(projectId, selectedMaterial.getId());
-                            requireActivity().runOnUiThread(() -> {
-                                Toast.makeText(getContext(), "Материал удалён", Toast.LENGTH_SHORT).show();
-                                loadProjectMaterialsAndTools();
-                            });
-                        } catch (Exception e) {
-                            requireActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), "Ошибка удаления: " + e.getMessage(), Toast.LENGTH_LONG).show()
-                            );
-                        }
-                    }).start())
+                    .setMessage("Удалить этот материал из проекта?")
+                    .setPositiveButton("Удалить", (dialog, which) -> {
+                        new Thread(() -> {
+                            try {
+                                ProjectMaterialLinkDTO link = getMaterialLinkByPosition(position);
+                                if (link != null) {
+                                    projectUseCase.unlinkMaterialFromProject(projectId, link.getMaterialId());
+
+                                    MaterialCatalog material = materialUseCase.getMaterialById(link.getMaterialId());
+                                    MaterialStock stock = findMatchingStock(material);
+                                    if (stock != null) {
+                                        materialStockUseCase.delete(stock);
+                                        materialStockUseCase.createNewMaterialStock(
+                                                stock.getName(), stock.getColor(), stock.getQuantity() + link.getQuantity(), stock.getUnit()
+                                        );
+                                    } else {
+                                        materialStockUseCase.createNewMaterialStock(
+                                                material.getName(), material.getColor(), link.getQuantity(), material.getUnit()
+                                        );
+                                    }
+
+                                    requireActivity().runOnUiThread(() -> {
+                                        Toast.makeText(getContext(), "Материал удалён", Toast.LENGTH_SHORT).show();
+                                        loadProjectMaterialsAndTools();
+                                    });
+                                }
+                            } catch (Exception e) {
+                                requireActivity().runOnUiThread(() ->
+                                        Toast.makeText(getContext(), "Ошибка: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                                );
+                            }
+                        }).start();
+                    })
                     .setNegativeButton("Отмена", null)
                     .show();
             return true;
         });
 
-        lvTools.setOnItemLongClickListener((parent, itemView, position, id) -> {
-            ToolCatalog selectedTool = (ToolCatalog) parent.getItemAtPosition(position);
+        lvTools.setOnItemLongClickListener((parent, view1, position, id) -> {
+            ToolCatalog tool = toolsAdapter.getItem(position);
             new AlertDialog.Builder(requireContext())
                     .setTitle("Удалить инструмент")
-                    .setMessage("Удалить " + selectedTool.getName() + " из проекта?")
+                    .setMessage("Удалить " + tool.getName() + " из проекта?")
                     .setPositiveButton("Удалить", (dialog, which) -> new Thread(() -> {
                         try {
-                            projectUseCase.unlinkToolFromProject(projectId, selectedTool.getId());
+                            projectUseCase.unlinkToolFromProject(projectId, tool.getId());
                             requireActivity().runOnUiThread(() -> {
                                 Toast.makeText(getContext(), "Инструмент удалён", Toast.LENGTH_SHORT).show();
                                 loadProjectMaterialsAndTools();
@@ -144,9 +159,7 @@ public class ProjectDetailsFragment extends Fragment {
 
     private void initDatabase() {
         AppDatabase db = Room.databaseBuilder(
-                        requireContext().getApplicationContext(),
-                        AppDatabase.class,
-                        "coursework-db")
+                        requireContext().getApplicationContext(), AppDatabase.class, "coursework-db")
                 .allowMainThreadQueries()
                 .fallbackToDestructiveMigration()
                 .build();
@@ -166,34 +179,16 @@ public class ProjectDetailsFragment extends Fragment {
     private void loadProjectData() {
         new Thread(() -> {
             try {
-                List<Project> projects = projectUseCase.getAllProjects();
-                for (Project p : projects) {
-                    if (p.getId() == projectId) {
-                        currentProject = p;
-                        break;
-                    }
-                }
-
-                if (currentProject == null) {
-                    requireActivity().runOnUiThread(() -> {
-                        Toast.makeText(getContext(), "Проект не найден", Toast.LENGTH_SHORT).show();
-                        requireActivity().onBackPressed();
-                    });
-                    return;
-                }
-
+                currentProject = projectUseCase.getProjectById(projectId);
                 requireActivity().runOnUiThread(() -> {
                     tvProjectName.setText(currentProject.getName());
                     tvProjectType.setText("Тип: " + currentProject.getCraftType());
                 });
-
                 loadProjectMaterialsAndTools();
-
             } catch (Exception e) {
-                requireActivity().runOnUiThread(() -> {
-                    Toast.makeText(getContext(), "Ошибка загрузки данных", Toast.LENGTH_SHORT).show();
-                    requireActivity().onBackPressed();
-                });
+                requireActivity().runOnUiThread(() ->
+                        Toast.makeText(getContext(), "Ошибка загрузки проекта", Toast.LENGTH_SHORT).show()
+                );
             }
         }).start();
     }
@@ -201,57 +196,76 @@ public class ProjectDetailsFragment extends Fragment {
     private void loadProjectMaterialsAndTools() {
         new Thread(() -> {
             try {
-                List<MaterialCatalog> allMaterials = projectUseCase.getAllMaterials();
-                List<ToolCatalog> allTools = projectUseCase.getAllTools();
+                List<ProjectMaterialLinkDTO> links = projectRepo.getMaterialLinks();
+                List<MaterialCatalog> materials = materialUseCase.getAllMaterials();
 
-                List<ProjectMaterialLinkDTO> allMaterialLinks = ((DBProjectRepository) projectRepo).getMaterialLinks();
-                List<ProjectToolLinkDTO> allToolLinks = ((DBProjectRepository) projectRepo).getToolLinks();
-
-                List<MaterialCatalog> projectMaterials = new ArrayList<>();
-                List<ToolCatalog> projectTools = new ArrayList<>();
-
-                for (ProjectMaterialLinkDTO link : allMaterialLinks) {
+                List<String> materialDescriptions = new ArrayList<>();
+                for (ProjectMaterialLinkDTO link : links) {
                     if (link.getProjectId() == projectId) {
-                        for (MaterialCatalog material : allMaterials) {
-                            if (material.getId() == link.getMaterialId()) {
-                                projectMaterials.add(material);
-                                break;
-                            }
+                        MaterialCatalog material = materialUseCase.getMaterialById(link.getMaterialId());
+                        if (material != null) {
+                            materialDescriptions.add(material.getName() + " (" + material.getColor() + "), " +
+                                    link.getQuantity() + " " + material.getUnit());
                         }
                     }
                 }
 
-                for (ProjectToolLinkDTO link : allToolLinks) {
+                List<ToolCatalog> tools = new ArrayList<>();
+                for (ProjectToolLinkDTO link : projectRepo.getToolLinks()) {
                     if (link.getProjectId() == projectId) {
-                        for (ToolCatalog tool : allTools) {
-                            if (tool.getId() == link.getToolId()) {
-                                projectTools.add(tool);
-                                break;
-                            }
-                        }
+                        ToolCatalog tool = toolUseCase.getToolById(link.getToolId());
+                        if (tool != null) tools.add(tool);
                     }
                 }
 
                 requireActivity().runOnUiThread(() -> {
                     materialsAdapter.clear();
-                    materialsAdapter.addAll(projectMaterials);
+                    materialsAdapter.addAll(materialDescriptions);
                     toolsAdapter.clear();
-                    toolsAdapter.addAll(projectTools);
+                    toolsAdapter.addAll(tools);
                     materialsAdapter.notifyDataSetChanged();
                     toolsAdapter.notifyDataSetChanged();
                 });
 
             } catch (Exception e) {
                 requireActivity().runOnUiThread(() ->
-                        Toast.makeText(getContext(), "Ошибка загрузки: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                        Toast.makeText(getContext(), "Ошибка загрузки: " + e.getMessage(), Toast.LENGTH_SHORT).show()
+                );
             }
         }).start();
+    }
+
+
+
+    private ProjectMaterialLinkDTO getMaterialLinkByPosition(int position) {
+        List<ProjectMaterialLinkDTO> links = projectRepo.getMaterialLinks();
+        int index = 0;
+        for (ProjectMaterialLinkDTO link : links) {
+            if (link.getProjectId() == projectId) {
+                if (index == position) return link;
+                index++;
+            }
+        }
+        return null;
+    }
+
+    private MaterialStock findMatchingStock(MaterialCatalog material) {
+        for (MaterialStock stock : materialStockUseCase.getAllMaterials()) {
+            if (stock.getName().equals(material.getName()) &&
+                    stock.getColor().equals(material.getColor()) &&
+                    stock.getUnit().equals(material.getUnit())) {
+                return stock;
+            }
+        }
+        return null;
     }
 
     private void showAddMaterialDialog() {
         new Thread(() -> {
             try {
                 List<MaterialCatalog> allMaterials = materialUseCase.getAllMaterials();
+                List<MaterialStock> stockList = materialStockUseCase.getAllMaterials();
+
                 requireActivity().runOnUiThread(() -> {
                     if (allMaterials.isEmpty()) {
                         Toast.makeText(getContext(), "Нет доступных материалов", Toast.LENGTH_SHORT).show();
@@ -263,7 +277,21 @@ public class ProjectDetailsFragment extends Fragment {
 
                     String[] items = new String[allMaterials.size()];
                     for (int i = 0; i < allMaterials.size(); i++) {
-                        items[i] = allMaterials.get(i).getName() + " (" + allMaterials.get(i).getColor() + "), " + allMaterials.get(i).getUnit();
+                        MaterialCatalog material = allMaterials.get(i);
+
+                        // Найти количество на складе для этого материала
+                        int stockQuantity = 0;
+                        for (MaterialStock stock : stockList) {
+                            if (stock.getName().equals(material.getName())
+                                    && stock.getColor().equals(material.getColor())
+                                    && stock.getUnit().equals(material.getUnit())) {
+                                stockQuantity = stock.getQuantity();
+                                break;
+                            }
+                        }
+
+                        items[i] = material.getName() + " (" + material.getColor() + "), " + material.getUnit()
+                                + " - В наличии: " + stockQuantity;
                     }
 
                     builder.setItems(items, (dialog, which) -> showQuantityDialog(allMaterials.get(which)));
@@ -275,6 +303,7 @@ public class ProjectDetailsFragment extends Fragment {
             }
         }).start();
     }
+
 
     private void showAddToolDialog() {
         new Thread(() -> {
@@ -400,6 +429,7 @@ public class ProjectDetailsFragment extends Fragment {
                             Toast.makeText(getContext(), "Ошибка добавления: " + e.getMessage(), Toast.LENGTH_SHORT).show());
                 }
             }).start();
+
         });
 
         builder.setNegativeButton("Отмена", (dialog, which) -> dialog.cancel());
@@ -412,4 +442,3 @@ public class ProjectDetailsFragment extends Fragment {
         loadProjectMaterialsAndTools();
     }
 }
-

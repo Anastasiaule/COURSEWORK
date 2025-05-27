@@ -31,5 +31,10 @@ public class MaterialCatalogUseCase {
     public List<MaterialCatalog> getAllMaterials() {
         return repo.findAll();
     }
-
+    public MaterialCatalog getMaterialById(int id) {
+        for (MaterialCatalog m : getAllMaterials()) {
+            if (m.getId() == id) return m;
+        }
+        return null;
+    }
 }

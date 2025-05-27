@@ -22,9 +22,10 @@ public class MaterialStockUseCase {
         repo.delete(material);
     }
     public MaterialStock createNewMaterialStock(String name, String color, int quantity, String unit) throws MaterialException, SQLException {
-        if (color == null || color.trim().isEmpty()) throw new MaterialException("Цвет обязателен");
+        if (color == null || color.trim().isEmpty()) {
+            throw new MaterialException("Цвет обязателен");
+        }
 
-        // Проверяем, есть ли уже такой материал на складе
         List<MaterialStock> allStock = repo.findAll();
         for (MaterialStock existing : allStock) {
             if (existing.getName().equalsIgnoreCase(name)
@@ -32,7 +33,8 @@ public class MaterialStockUseCase {
                     && existing.getUnit().equalsIgnoreCase(unit)) {
 
 
-                int newQuantity = existing.getQuantity() + quantity-existing.getQuantity();
+                int newQuantity =  quantity;
+
                 MaterialStock updated = new MaterialStock(
                         existing.getId(),
                         name,
@@ -40,16 +42,18 @@ public class MaterialStockUseCase {
                         newQuantity,
                         unit
                 );
-                repo.save(updated);  // Просто обновляем старую запись
+
+                repo.save(updated);
                 return updated;
             }
         }
 
-        // Если не найден — создаём новую
+        // Если такой материал не найден — создаём новый
         MaterialStock newMaterial = new MaterialStock(name, color, quantity, unit);
         repo.save(newMaterial);
         return newMaterial;
     }
+
 
 
     public List<MaterialStock> getAllMaterials() {

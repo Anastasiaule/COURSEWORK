@@ -80,6 +80,7 @@ public class StockFragment extends Fragment {
             @Override public void onTabReselected(TabLayout.Tab tab) {}
         });
 
+
         lvStock.setOnItemLongClickListener((parent, v, position, id) -> {
             if (tabLayout.getSelectedTabPosition() == 0) {
                 MaterialStock selected = (MaterialStock) parent.getItemAtPosition(position);

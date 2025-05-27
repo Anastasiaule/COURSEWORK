@@ -80,6 +80,7 @@ public class RoomStorage {
         return out;
     }
 
+
     public boolean deleteMaterial(int materialId) {
         MaterialEntity e = new MaterialEntity();
         e.id = materialId;

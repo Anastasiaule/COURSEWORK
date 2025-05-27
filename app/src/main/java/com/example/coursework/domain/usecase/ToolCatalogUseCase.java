@@ -1,5 +1,6 @@
 package com.example.coursework.domain.usecase;
 
+import com.example.coursework.domain.entity.MaterialCatalog;
 import com.example.coursework.domain.entity.ToolCatalog;
 
 import com.example.coursework.domain.port.ToolCatalogRepository;
@@ -30,5 +31,11 @@ public class ToolCatalogUseCase {
     }
     public List<ToolCatalog> getAllTools() {
         return toolRepo.findAll();
+    }
+    public ToolCatalog getToolById(int id) {
+        for (ToolCatalog m : getAllTools()) {
+            if (m.getId() == id) return m;
+        }
+        return null;
     }
 }
