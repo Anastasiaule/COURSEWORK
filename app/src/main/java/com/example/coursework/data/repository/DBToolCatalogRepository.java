@@ -20,6 +20,11 @@ public class DBToolCatalogRepository implements ToolCatalogRepository {
         roomStorage.addTool(toolCatalog);
         return toolCatalog;
     }
+    @Override
+    public boolean hasLinkedProjects(int toolId) {
+        return roomStorage.getProjectToolDao().isToolLinked(toolId);
+    }
+
 
     @Override
     public Optional<ToolCatalog> findById(int id) {

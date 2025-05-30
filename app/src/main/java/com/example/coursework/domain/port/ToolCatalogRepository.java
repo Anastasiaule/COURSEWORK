@@ -10,5 +10,7 @@ public interface ToolCatalogRepository {
     ToolCatalog save(ToolCatalog tool) throws SQLException;
     Optional<ToolCatalog> findById(int id)throws SQLException;
     List<ToolCatalog> findAll();
+    boolean hasLinkedProjects(int toolId);
+
     void delete(ToolCatalog tool) throws SQLException;
 }

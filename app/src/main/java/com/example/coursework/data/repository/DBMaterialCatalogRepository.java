@@ -10,6 +10,10 @@ import java.util.Optional;
 
 public class DBMaterialCatalogRepository implements MaterialCatalogRepository {
     private final RoomStorage roomStorage;
+    @Override
+    public boolean hasLinkedProjects(int materialId) {
+        return roomStorage.getProjectMaterialDao().isMaterialLinked(materialId);
+    }
 
     public DBMaterialCatalogRepository(RoomStorage roomStorage) {
         this.roomStorage = roomStorage;

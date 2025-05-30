@@ -8,6 +8,7 @@ public interface ProjectDao {
     @Insert
     long insert(ProjectEntity project);
 
+
     @Update
     void update(ProjectEntity project);
 

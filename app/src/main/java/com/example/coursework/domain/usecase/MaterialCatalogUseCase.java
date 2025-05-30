@@ -31,6 +31,10 @@ public class MaterialCatalogUseCase {
     public List<MaterialCatalog> getAllMaterials() {
         return repo.findAll();
     }
+    public boolean isMaterialLinked(int materialId) {
+        return repo.hasLinkedProjects(materialId);
+    }
+
     public MaterialCatalog getMaterialById(int id) {
         for (MaterialCatalog m : getAllMaterials()) {
             if (m.getId() == id) return m;

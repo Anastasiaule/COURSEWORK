@@ -20,6 +20,7 @@ import androidx.fragment.app.Fragment;
 import androidx.room.Room;
 
 import com.example.coursework.R;
+import com.example.coursework.data.dto.ProjectToolLinkDTO;
 import com.example.coursework.domain.entity.MaterialCatalog;
 import com.example.coursework.domain.entity.ToolCatalog;
 import com.example.coursework.domain.exceptions.ToolException;
@@ -144,6 +145,13 @@ public class CatalogFragment extends Fragment {
                 .setPositiveButton("Удалить", (dialog, which) -> {
                     new Thread(() -> {
                         try {
+                            if (materialUseCase.isMaterialLinked(material.getId())) {
+                                requireActivity().runOnUiThread(() ->
+                                        Toast.makeText(getContext(), "Нельзя удалить — материал используется в проектах", Toast.LENGTH_LONG).show()
+                                );
+                                return;
+                            }
+
                             materialUseCase.delete(material);
                             requireActivity().runOnUiThread(() -> {
                                 allMaterials.remove(material);
@@ -152,13 +160,15 @@ public class CatalogFragment extends Fragment {
                             });
                         } catch (SQLException e) {
                             requireActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                                    Toast.makeText(getContext(), "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                            );
                         }
                     }).start();
                 })
                 .setNegativeButton("Отмена", null)
                 .show();
     }
+
 
     private void showDeleteToolDialog(ToolCatalog tool) {
         new AlertDialog.Builder(getContext())
@@ -167,6 +177,13 @@ public class CatalogFragment extends Fragment {
                 .setPositiveButton("Удалить", (dialog, which) -> {
                     new Thread(() -> {
                         try {
+                            if (toolUseCase.isToolLinked(tool.getId())) {
+                                requireActivity().runOnUiThread(() ->
+                                        Toast.makeText(getContext(), "Нельзя удалить — инструмент используется в проектах", Toast.LENGTH_LONG).show()
+                                );
+                                return;
+                            }
+
                             toolUseCase.delete(tool);
                             requireActivity().runOnUiThread(() -> {
                                 allTools.remove(tool);
@@ -175,13 +192,15 @@ public class CatalogFragment extends Fragment {
                             });
                         } catch (SQLException e) {
                             requireActivity().runOnUiThread(() ->
-                                    Toast.makeText(getContext(), "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                                    Toast.makeText(getContext(), "Ошибка: " + e.getMessage(), Toast.LENGTH_LONG).show()
+                            );
                         }
                     }).start();
                 })
                 .setNegativeButton("Отмена", null)
                 .show();
     }
+
 
     private void filterData(String query) {
         String lowerQuery = query.toLowerCase();

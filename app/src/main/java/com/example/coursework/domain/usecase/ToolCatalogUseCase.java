@@ -29,6 +29,10 @@ public class ToolCatalogUseCase {
     public void delete(ToolCatalog tool) throws SQLException {
         toolRepo.delete(tool);
     }
+    public boolean isToolLinked(int toolId) {
+        return toolRepo.hasLinkedProjects(toolId);
+    }
+
     public List<ToolCatalog> getAllTools() {
         return toolRepo.findAll();
     }

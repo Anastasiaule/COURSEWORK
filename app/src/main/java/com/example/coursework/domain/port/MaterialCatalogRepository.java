@@ -11,5 +11,7 @@ public interface MaterialCatalogRepository {
     MaterialCatalog save(MaterialCatalog material) throws SQLException;
     Optional<MaterialCatalog> findById(int id) throws SQLException;
     List<MaterialCatalog> findAll();
+    boolean hasLinkedProjects(int materialId);
+
     void delete(MaterialCatalog material) throws SQLException;
 }

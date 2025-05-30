@@ -9,6 +9,7 @@ import com.example.coursework.domain.entity.ToolCatalog;
 import com.example.coursework.domain.entity.ToolStock;
 import com.example.coursework.data.dto.ProjectMaterialLinkDTO;
 import com.example.coursework.data.dto.ProjectToolLinkDTO;
+import com.example.coursework.domain.usecase.ProjectUseCase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -188,6 +189,7 @@ public class RoomStorage {
         return true;
     }
 
+
     // Найти материал по id
     public Optional<MaterialStock> findMaterialStockById(int id) {
         for (MaterialStockEntity e : db.materialStockDao().getAll()) {
@@ -319,4 +321,12 @@ public List<Project> readProjectsWithMaterials() {
     }
     return result;
 }
+
+    public ProjectToolDao getProjectToolDao() {
+        return db.projectToolDao();
+    }
+    public ProjectMaterialDao getProjectMaterialDao() {
+        return db.projectMaterialDao();
+    }
+
 }

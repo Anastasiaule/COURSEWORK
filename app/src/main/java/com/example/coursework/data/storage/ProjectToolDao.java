@@ -6,6 +6,7 @@ import java.util.List;
 
 @Dao
 public interface ProjectToolDao {
+
     @Insert
     void insert(ProjectToolCrossRef ref);
 
@@ -19,6 +20,8 @@ public interface ProjectToolDao {
             "JOIN toolCatalog t ON x.toolId = t.id")
     List<ProjectToolLinkDTO> getAllLinks();
 
+    @Query("SELECT COUNT(*) > 0 FROM project_tools WHERE toolId = :toolId")
+    boolean isToolLinked(int toolId);
 
     @Query("SELECT * FROM project_tools WHERE projectId = :projectId")
     List<ProjectToolCrossRef> getByProjectId(int projectId);

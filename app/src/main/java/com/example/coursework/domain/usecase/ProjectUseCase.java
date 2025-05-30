@@ -80,6 +80,8 @@ public class ProjectUseCase {
         // Сохраняем связь
         projectRepo.linkTool(project.getId(), tool.getId());
     }
+
+
     public List<MaterialCatalog> getAllMaterials() {
         return materialRepo.findAll();
     }

@@ -202,8 +202,6 @@ public class ProjectDetailsFragment extends Fragment {
         new Thread(() -> {
             try {
                 List<ProjectMaterialLinkDTO> links = projectRepo.getMaterialLinks();
-                List<MaterialCatalog> materials = materialUseCase.getAllMaterials();
-
                 List<String> materialDescriptions = new ArrayList<>();
                 for (ProjectMaterialLinkDTO link : links) {
                     if (link.getProjectId() == projectId) {

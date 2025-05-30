@@ -24,6 +24,8 @@ public interface ProjectMaterialDao {
             "JOIN projects p ON x.projectId = p.id " +
             "JOIN materialCatalog m ON x.materialId = m.id")
     List<ProjectMaterialLinkDTO> getAllLinks();
+    @Query("SELECT COUNT(*) > 0 FROM project_materials WHERE materialId = :materialId")
+    boolean isMaterialLinked(int materialId);
 
     @Query("SELECT * FROM project_materials WHERE projectId = :projectId")
     List<ProjectMaterialCrossRef> getByProjectId(int projectId);
