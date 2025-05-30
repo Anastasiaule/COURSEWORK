@@ -1,6 +1,6 @@
 package com.example.coursework.domain.entity;
 
-import com.example.coursework.repository.storage.MaterialStockEntity;
+import com.example.coursework.data.storage.MaterialStockEntity;
 
 public class MaterialStock extends MaterialStockEntity {
     private String name;

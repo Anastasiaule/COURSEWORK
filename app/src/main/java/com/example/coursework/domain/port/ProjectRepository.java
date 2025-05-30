@@ -1,8 +1,8 @@
 package com.example.coursework.domain.port;
 
 import com.example.coursework.domain.entity.Project;
-import com.example.coursework.repository.dto.ProjectMaterialLinkDTO;
-import com.example.coursework.repository.dto.ProjectToolLinkDTO;
+import com.example.coursework.data.dto.ProjectMaterialLinkDTO;
+import com.example.coursework.data.dto.ProjectToolLinkDTO;
 
 import java.sql.SQLException;
 import java.util.Optional;
